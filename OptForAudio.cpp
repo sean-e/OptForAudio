@@ -2,11 +2,12 @@
  * OptForAudio
  * License: UNLICENSE
  *
- * I (Sean Echevarria) wrote this to do repetitive system housekeeping necessary
- * to run Amplitube on a Dell laptop without audio dropouts.
+ * I (Sean Echevarria) wrote this to do repetitive system housekeeping necessary 
+ * to run Amplitube on an old Dell laptop with significantly reduced audio 
+ * dropouts and buffer underruns.
  * 
  * It:
- *	 Runs elevated
+ *   Runs elevated
  *   Disables display power down
  *   Disables screensaver
  *   Disables Wi-Fi interface
@@ -99,13 +100,9 @@ int main()
 		{
 			HANDLE tmp = LaunchProgram(it);
 			if (!tmp)
-			{
 				ReportStatus(L"Failed to launch: " + it);
-			}
 			else
-			{
 				processes.push_back(tmp);
-			}
 		}
 		else
 			ReportStatus(L"Program not found: " + it);
