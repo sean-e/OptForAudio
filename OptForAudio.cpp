@@ -32,19 +32,48 @@
 #pragma comment(lib, "PowrProf")
 
 
-// one day, these might be controlled by command line params
 bool gDisplayRequired = true;
 bool gDisableScreensaver = true;
 bool gDisableCPUThrottle = true;
 bool gDisableWifi = true;
+bool gDisableCoreAffinity = true;
 bool gRunUtilApps = false;
 
+std::vector<std::wstring> gPrograms;
 
 void ReportStatus(std::wstring msg);
 HANDLE LaunchProgram(std::wstring cmdline, bool launchUsingShellToken = true);
 
-int main()
+int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 {
+	// command line parameters to override default behavior
+	for (int i = 1; i < argc; i++)
+	{
+		if (_wcsicmp(argv[i], L"-xDisplay") == 0)
+			gDisplayRequired = false;
+		else if (_wcsicmp(argv[i], L"-xScreensaver") == 0)
+			gDisableScreensaver = false;
+		else if (_wcsicmp(argv[i], L"-xCpuThrottle") == 0)
+			gDisableCPUThrottle = false;
+		else if (_wcsicmp(argv[i], L"-xWifi") == 0)
+			gDisableWifi = false;
+		else if (_wcsicmp(argv[i], L"-xCoreAffinity") == 0)
+			gDisableCoreAffinity = false;
+		else if (_wcsicmp(argv[i], L"-runUtils") == 0)
+			gRunUtilApps = true;
+		else if (argv[i][0] == L'-')
+			ReportStatus(L"unrecognized command line parameter");
+		else if (_wcsicmp(argv[i], L"?") == 0)
+		{
+			// todo: display help
+		}
+		else
+		{
+			// todo: check for semi-colon delimited program list; parse and add to gPrograms if is a file
+		}
+	}
+
+
 	// Change system settings before launching the program(s)
 	//
 	ReportStatus(L"Optimizing system for realtime audio...");
@@ -78,31 +107,55 @@ int main()
 	}
 
 
+	std::vector<HANDLE> processes;
 	// launch program(s), unelevated
 	//
-	std::vector<std::wstring> programs;
-
 	if (gRunUtilApps)
 	{
-		programs.emplace_back(LR"(C:\Program Files\RightMark\ppmpanel\ppmpanel.exe)");
-		programs.emplace_back(LR"(C:\Program Files\LatencyMon\LatMon.exe)");
+		std::vector<std::wstring> utilPrograms;
+		utilPrograms.emplace_back(LR"(C:\Program Files\RightMark\ppmpanel\ppmpanel.exe)");
+		utilPrograms.emplace_back(LR"(C:\Program Files\LatencyMon\LatMon.exe)");
+
+		ReportStatus(L"Starting util programs...");
+		for (const auto& it : utilPrograms)
+		{
+			if (::PathFileExists(it.c_str()))
+			{
+				HANDLE tmp = LaunchProgram(it);
+				if (tmp)
+					processes.push_back(tmp);
+				else
+					ReportStatus(L"Failed to launch: " + it);
+			}
+			else
+				ReportStatus(L"Program not found: " + it);
+		}
 	}
 
-	// could add command line support to launch programs rather than hardcoding this program list 
-	// (cmd line would be semi-colon delimited list?)
-	programs.emplace_back(LR"(C:\Program Files\IK Multimedia\AmpliTube 5\AmpliTube 5.exe)");
+	gPrograms.emplace_back(LR"(C:\Program Files\IK Multimedia\AmpliTube 5\AmpliTube 5.exe)");
 
 	ReportStatus(L"Starting programs...");
-	std::vector<HANDLE> processes;
-	for (const auto& it : programs)
+	for (const auto& it : gPrograms)
 	{
 		if (::PathFileExists(it.c_str()))
 		{
 			HANDLE tmp = LaunchProgram(it);
-			if (!tmp)
-				ReportStatus(L"Failed to launch: " + it);
-			else
+			if (tmp)
+			{
+				if (gDisableCoreAffinity)
+				{
+					DWORD_PTR procAffinityMask = 0, systemAffinityMask = 0;
+					::GetProcessAffinityMask(tmp, &procAffinityMask, &systemAffinityMask);
+					// disable core 0 and 1:
+					procAffinityMask &= 0xfffffffffffffffc;
+					if (!::SetProcessAffinityMask(tmp, procAffinityMask))
+						ReportStatus(L"process affinity fail");
+				}
+
 				processes.push_back(tmp);
+			}
+			else
+				ReportStatus(L"Failed to launch: " + it);
 		}
 		else
 			ReportStatus(L"Program not found: " + it);
@@ -148,6 +201,8 @@ int main()
 
 	ReportStatus(L"Completed, pausing before exit...");
 	::Sleep(5000);
+
+	return 0;
 }
 
 HANDLE
