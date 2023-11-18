@@ -1,7 +1,7 @@
 # OptForAudio
 Utility to temporarily change Windows system settings for improved performance during real time audio generation.
 
-I wrote this to do repetitive system housekeeping necessary to run [IK Multimedia Amplitube](https://www.ikmultimedia.com/products/amplitube5/) on an old Dell laptop with significantly reduced audio dropouts and buffer underruns.
+I wrote this to do repetitive system housekeeping necessary to run [IK Multimedia Amplitube](https://www.ikmultimedia.com/products/amplitube5/) on an old Dell laptop with significantly reduced audio dropouts and buffer underruns (at an ASIO buffer size of 64 samples).
 
 It's a command line/console program that:
 - Runs elevated
