@@ -12,6 +12,7 @@
  *   Disables screensaver
  *   Disables Wi-Fi interface
  *   Disables CPU throttling
+ *   Disables Microsoft ACPI-Compliant Control Method Battery (device ID ACPI\PNP0C0A\1)
  *   Launches a list of programs (not elevated by default)
  *   Waits for all of the programs to exit
  *   Restores all changes it made
@@ -37,6 +38,7 @@ bool gDisableScreensaver = true;
 bool gDisableCPUThrottle = true;
 bool gDisableWifi = true;
 bool gDisableCoreAffinity = true;
+bool gDisableAcpiDevice = true;
 bool gRunUtilApps = false;
 
 std::vector<std::wstring> gPrograms;
@@ -59,10 +61,18 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			gDisableWifi = false;
 		else if (_wcsicmp(argv[i], L"-xCoreAffinity") == 0)
 			gDisableCoreAffinity = false;
+		else if (_wcsicmp(argv[i], L"-xAcpi") == 0)
+			gDisableAcpiDevice = false;
 		else if (_wcsicmp(argv[i], L"-runUtils") == 0)
 			gRunUtilApps = true;
 		else if (argv[i][0] == L'-')
-			ReportStatus(L"unrecognized command line parameter");
+		{
+			ReportStatus(L"unrecognized command line parameter: ");
+			ReportStatus(argv[i]);
+			ReportStatus(L"Exiting...");
+			::Sleep(5000);
+			return -1;
+		}
 		else if (_wcsicmp(argv[i], L"?") == 0)
 		{
 			// todo: display help
@@ -103,7 +113,12 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 	if (gDisableWifi)
 	{
 		// run without waiting for command to complete since it is slow to run
-		::system(R"(start /min %windir%\System32\netsh.exe interface set interface "Wi-Fi" disabled)");
+		::_wsystem(LR"(start /min %windir%\System32\netsh.exe interface set interface "Wi-Fi" disabled)");
+	}
+
+	if (gDisableAcpiDevice)
+	{
+		::_wsystem(LR"(%windir%\System32\pnputil.exe /disable-device ACPI\PNP0C0A\1)");
 	}
 
 
@@ -182,7 +197,12 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 	if (gDisableWifi)
 	{
 		// run without waiting for command to complete since it is slow to run
-		::system(R"(start /min %windir%\System32\netsh.exe interface set interface "Wi-Fi" enabled)");
+		::_wsystem(LR"(start /min %windir%\System32\netsh.exe interface set interface "Wi-Fi" enabled)");
+	}
+
+	if (gDisableAcpiDevice)
+	{
+		::_wsystem(LR"(%windir%\System32\pnputil.exe /enable-device ACPI\PNP0C0A\1)");
 	}
 
 	if (gDisableCPUThrottle)

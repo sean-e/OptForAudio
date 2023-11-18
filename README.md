@@ -9,6 +9,7 @@ It's a command line/console program that:
 - Disables screensaver timeout (due more to convenience than to performance)
 - Disables Wi-Fi interface
 - Disables CPU throttling ([see C States](https://support.presonus.com/hc/en-us/articles/360028620552-Quantum-Disabling-C-States-on-a-Windows-10-computer))
+- Disables Microsoft ACPI-Compliant Control Method Battery (device ID ACPI\PNP0C0A\1)
 - Launches a list of programs (but not elevated)
 - Disables CPU affinity of cores 0 and 1 of launched programs (but not the util programs) ([related to this advice for nvidia drivers](https://www.bluecataudio.com/Blog/tip-of-the-day/solving-audio-dropouts-dpc-latency-issues-with-nvidia-drivers-on-windows/))
 - Waits for all of the programs to exit
@@ -21,6 +22,7 @@ Optional command-line params:
 - `-xCpuThrottle`	prevent change to CPU throttling
 - `-xWifi`			prevent change to Wi-Fi interface
 - `-xCoreAffinity`	prevent change to CPU core affinity of launched programs
+- `-xAcpi` 			prevent change to Microsoft ACPI-Compliant Control Method Battery
 - `-runUtils`		starts [LatencyMon](https://www.resplendence.com/latencymon) (if found at C:\Program Files\LatencyMon\LatMon.exe) and [Rightmark PPM Panel](https://sourceforge.net/projects/rightmark/) (if found at C:\Program Files\RightMark\ppmpanel\ppmpanel.exe)
 
 Additional reference:
