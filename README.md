@@ -29,3 +29,4 @@ Additional reference:
 - https://www.sweetwater.com/sweetcare/articles/causes-of-dpc-latency-and-how-to-fix-them/
 - https://support.presonus.com/hc/en-us/articles/360025279231-Optimizing-Your-Computer-for-Audio-Windows-10
 - https://www.bluecataudio.com/Blog/tip-of-the-day/how-to-optimize-a-windows-laptop-for-low-latency-real-time-audio/
+- https://www.cantabilesoftware.com/glitchfree/
