@@ -65,6 +65,28 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			gDisableAcpiDevice = false;
 		else if (_wcsicmp(argv[i], L"-runUtils") == 0)
 			gRunUtilApps = true;
+		else if (_wcsicmp(argv[i], L"?") == 0 ||
+			_wcsicmp(argv[i], L"-?") == 0 ||
+			_wcsicmp(argv[i], L"/?") == 0 ||
+			_wcsicmp(argv[i], L"help") == 0 ||
+			_wcsicmp(argv[i], L"-help") == 0 ||
+			_wcsicmp(argv[i], L"/help") == 0)
+		{
+			std::wstring helpMsg = 
+L"Optional command arguments:\n\
+-xDisplay       prevent change to display power down\n\
+-xScreensaver   prevent change to screensaver timeout\n\
+-xCpuThrottle   prevent change to CPU throttling\n\
+-xWifi          prevent change to Wi-Fi interface\n\
+-xCoreAffinity  prevent change to CPU core affinity of launched programs\n\
+-xAcpi          prevent change to Microsoft ACPI-Compliant Control Method Battery\n\
+-runUtils       starts LatencyMon (if found at C:\\Program Files\\LatencyMon\\LatMon.exe)\n\
+                and Rightmark PPM Panel (if found at C:\\Program Files\\RightMark\\ppmpanel\\ppmpanel.exe)";
+			ReportStatus(helpMsg);
+			ReportStatus(L"pausing before exit...");
+			::Sleep(15000);
+			return 0;
+		}
 		else if (argv[i][0] == L'-')
 		{
 			ReportStatus(L"unrecognized command line parameter: ");
@@ -72,10 +94,6 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			ReportStatus(L"Exiting...");
 			::Sleep(5000);
 			return -1;
-		}
-		else if (_wcsicmp(argv[i], L"?") == 0)
-		{
-			// todo: display help
 		}
 		else
 		{
@@ -148,6 +166,8 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 	}
 
 	gPrograms.emplace_back(LR"(C:\Program Files\IK Multimedia\AmpliTube 5\AmpliTube 5.exe)");
+	gPrograms.emplace_back(LR"(C:\Program Files\Cakewalk\Cakewalk Core\Cakewalk.exe)");
+	gPrograms.emplace_back(LR"(C:\Program Files\Blue Cat Audio\Blue Cat's Axiom\Blue Cat's Axiom.exe)");
 
 	ReportStatus(L"Starting programs...");
 	for (const auto& it : gPrograms)
@@ -157,6 +177,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 			HANDLE tmp = LaunchProgram(it);
 			if (tmp)
 			{
+				ReportStatus(L"Started: " + it);
 				if (gDisableCoreAffinity)
 				{
 					DWORD_PTR procAffinityMask = 0, systemAffinityMask = 0;
@@ -164,7 +185,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 					// disable core 0 and 1:
 					procAffinityMask &= 0xfffffffffffffffc;
 					if (!::SetProcessAffinityMask(tmp, procAffinityMask))
-						ReportStatus(L"process affinity fail");
+						ReportStatus(L"  process affinity fail");
 				}
 
 				processes.push_back(tmp);
@@ -173,7 +194,7 @@ int wmain(int argc, wchar_t* argv[], wchar_t* envp[])
 				ReportStatus(L"Failed to launch: " + it);
 		}
 		else
-			ReportStatus(L"Program not found: " + it);
+			ReportStatus(L"Skipped/not present: " + it);
 	}
 
 	// Wait for all launched programs to exit
